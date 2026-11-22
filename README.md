@@ -24,7 +24,7 @@ Además de completar la **baja de cliente (`eliminar_cliente`)** correspondiente
 
 * **Red:** Solana Devnet
 * **Program ID:** `7YXdjfWvzeE6e75c8ZjpZd72tWrkoguVHnDgqxVUzoExw`
-* **Ver en Solana Explorer:** https://solana.com/7YXdjfWvzE6e75c8ZjpZd72tWrkoguVHnDqgxVUzoExw
+* **Ver en Solana Explorer:** https://solana.com
 
 ---
 
