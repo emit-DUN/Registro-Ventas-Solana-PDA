@@ -281,10 +281,56 @@ async function clienteNuevoConVenta(
 }
 
 crearRegistro(nombre_negocio);
-// clienteNuevoConVenta(nombre_negocio, "Isaac K", "Sabritas", "No puedes comer solo una", 30);
-// registrarVenta(nombre_negocio, 1, "Coca", "Coca de sabor pineapple", 18);
-// cambiarMonto(nombre_negocio, 1, "Sabritas", 32);
-// hacerDevolucion(nombre_negocio, 1, "Coca");
-// verClientes(nombre_negocio);
+//////////////////// Eliminar Cliente (Dia 5 + Mejora) ////////////////////
+// Cierra la cuenta PDA del cliente (close = owner) y devuelve el rent al owner.
+// Falla si el cliente aun tiene compras activas (compras > 0).
+async function eliminarCliente(nombre_negocio, id_cliente) {
+  const { registro, cliente } = cadena(nombre_negocio, id_cliente, "");
 
-// solana confirm -v <txHash>
+  const txHash = await pg.program.methods
+    .eliminarCliente(id_cliente) // eliminar_cliente
+    .accounts({
+      owner: owner,
+      registro: registro,
+      cliente: cliente,
+    })
+    .rpc();
+
+  console.log("Cliente eliminado. txHash:", txHash);
+}
+
+//////////////////// Flujo Completo de Demostracion ////////////////////
+async function ejecutarFlujoCompleto() {
+  const negocioDemo = "Tienda_" + Math.floor(Math.random() * 10000);
+  console.log("=== 1. Creando registro:", negocioDemo);
+  await crearRegistro(negocioDemo);
+
+  console.log("\n=== 2. Dando de alta cliente y venta valida");
+  const idCliente = await crearCliente(negocioDemo, "Isaac K");
+  await registrarVenta(negocioDemo, idCliente, "Sabri", "Sabritas 45g", 30);
+
+  console.log("\n=== 3. Probando validacion: venta con monto 0 (debe rechazarse)");
+  try {
+    await registrarVenta(negocioDemo, idCliente, "Grati", "Producto en cero", 0);
+  } catch (err) {
+    console.log("Rechazo esperado on-chain:", err.error?.errorMessage || err.message);
+  }
+
+  console.log("\n=== 4. Actualizando monto y consultando estado");
+  await cambiarMonto(negocioDemo, idCliente, "Sabri", 35);
+  await verClientes(negocioDemo);
+
+  console.log("\n=== 5. Probando validacion: baja de cliente con compras activas (debe rechazarse)");
+  try {
+    await eliminarCliente(negocioDemo, idCliente);
+  } catch (err) {
+    console.log("Rechazo esperado on-chain:", err.error?.errorMessage || err.message);
+  }
+
+  console.log("\n=== 6. Procesando devolucion y dando de baja al cliente (Dia 5)");
+  await hacerDevolucion(negocioDemo, idCliente, "Sabri");
+  await eliminarCliente(negocioDemo, idCliente);
+  await verClientes(negocioDemo);
+}
+
+ejecutarFlujoCompleto();
